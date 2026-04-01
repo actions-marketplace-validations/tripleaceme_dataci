@@ -1,5 +1,5 @@
 name: 'Data CI'
-description: 'CI/CD for AE: Impact Analysis, AI SQL Review, Cost Estimation, Lineage & Test Coverage for dbt PRs'
+description: 'CI/CD for analytics engineering — impact analysis, AI-powered SQL review, query cost estimation, lineage visualization, and test coverage reporting for dbt PRs'
 author: 'Ayoade Adegbite'
 
 branding:
@@ -7,10 +7,6 @@ branding:
   color: 'blue'
 
 inputs:
-  manifest-path:
-    description: 'Path to dbt manifest.json (relative to repo root)'
-    required: true
-    default: 'target/manifest.json'
   github-token:
     description: 'GitHub token for posting PR comments'
     required: true
@@ -19,6 +15,14 @@ inputs:
     description: 'Path to the dbt project root (where dbt_project.yml lives)'
     required: false
     default: '.'
+  manifest-path:
+    description: 'Path to a pre-built manifest.json. If not provided, DataCI generates it automatically.'
+    required: false
+    default: ''
+  dbt-version:
+    description: 'dbt-core version to use for manifest generation (ignored if manifest-path is set)'
+    required: false
+    default: '1.9.0'
   fail-on-missing-tests:
     description: 'Fail the action if new models have no tests'
     required: false
@@ -32,8 +36,9 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   env:
-    INPUT_MANIFEST_PATH: ${{ inputs.manifest-path }}
     INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
     INPUT_PROJECT_DIR: ${{ inputs.project-dir }}
+    INPUT_MANIFEST_PATH: ${{ inputs.manifest-path }}
+    INPUT_DBT_VERSION: ${{ inputs.dbt-version }}
     INPUT_FAIL_ON_MISSING_TESTS: ${{ inputs.fail-on-missing-tests }}
     INPUT_COVERAGE_THRESHOLD: ${{ inputs.coverage-threshold }}

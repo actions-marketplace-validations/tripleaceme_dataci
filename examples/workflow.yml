@@ -20,22 +20,10 @@ jobs:
         with:
           fetch-depth: 0  # Full history needed for git diff
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dbt
-        run: pip install dbt-core dbt-postgres  # or dbt-bigquery, dbt-snowflake
-
-      - name: Compile dbt (generate manifest)
-        run: dbt compile
-        # This generates target/manifest.json
-
       - name: Run DataCI
         uses: tripleaceme/dataci@v1
         with:
-          manifest-path: 'target/manifest.json'
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          fail-on-missing-tests: 'true'
-          coverage-threshold: '60'
+          # Optional: uncomment to enforce quality gates
+          # fail-on-missing-tests: 'true'
+          # coverage-threshold: '60'
