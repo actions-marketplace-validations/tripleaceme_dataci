@@ -98,13 +98,18 @@ def generate_manifest(project_dir: str, dbt_version: str) -> str:
         dependencies_file = Path(project_dir) / "dependencies.yml"
         if packages_file.exists() or dependencies_file.exists():
             print("  Running dbt deps...")
-            subprocess.run(
+            deps_result = subprocess.run(
                 ["dbt", "deps", "--profiles-dir", profiles_dir],
                 cwd=project_dir,
-                check=True,
                 capture_output=True,
                 text=True,
             )
+            if deps_result.returncode != 0:
+                print(f"  dbt deps stdout: {deps_result.stdout}")
+                print(f"  dbt deps stderr: {deps_result.stderr}")
+                # Continue anyway — deps failure might not block parse
+                # (e.g., private packages that aren't needed for DAG structure)
+                print("  Warning: dbt deps failed, continuing with dbt parse...")
 
         # Run dbt parse to generate manifest.json
         print("  Running dbt parse...")
@@ -116,8 +121,9 @@ def generate_manifest(project_dir: str, dbt_version: str) -> str:
         )
 
         if result.returncode != 0:
+            print(f"  dbt parse stdout: {result.stdout}")
             print(f"  dbt parse stderr: {result.stderr}")
-            raise RuntimeError(f"dbt parse failed: {result.stderr}")
+            raise RuntimeError(f"dbt parse failed with exit code {result.returncode}")
 
         manifest_path = os.path.join(project_dir, "target", "manifest.json")
         if not os.path.exists(manifest_path):
